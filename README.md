@@ -26,7 +26,8 @@ Eletrônica necessária:<br>
 <img src="http://nevoeiro.org/wp-content/uploads/2015/09/teke.png" alt="Telescopio" >
 
 Este projeto será desenvolvido pelo Grupo 
-<a href=http://nevoeiro.org/blog/archives/1290 target=&quot;_blank&quot;><span class="link">Nevoeiro</span></a><br>
+<a href=http://nevoeiro.org/blog/archives/1290 target=&quot;_blank&quot;><span class="link">Nevoeiro</span></a> 
+O <a href=http://nevoeiro.org target=&quot;_blank&quot;><span class="link">Nevoeiro</span></a> é um grupo independente de astrônomos amadores de Curitiba e região que se reúne para fazer observações astronômicas em campo afastado das luzes da cidade, além de atividades secundárias como o estudo e a prática de astrofotografia e construção artesanal de telescópios.
 
 
 
