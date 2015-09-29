@@ -25,17 +25,19 @@ Eletrônica necessária:<br>
 
 <img src="http://nevoeiro.org/wp-content/uploads/2015/09/teke.png" alt="Telescopio" >
 
+Este projeto será desenvolvido pelo Grupo 
+<a href=http://nevoeiro.org/blog/archives/1290 target=&quot;_blank&quot;><span class="link">Nevoeiro</span></a><br>
 
 
 
-Outros projetos que vale apena conhecer RECOMENTO CONHECER e foram fontes de inspiração e (copiação)
-http://soundstepper.sourceforge.net/
-Maciel Bassani Sparrenberger 
-https://sites.google.com/site/picgoto/
-Marcos Baungartner
-http://www.stellarjourney.com/
-Howard Dutton
+Outros projetos que vale apena conhecer e foram fontes de inspiração....
+
+<a href=http://soundstepper.sourceforge.net target=&quot;_blank&quot;><span class="link">Soundstepper</span></a><br>
+<a href=https://sites.google.com/site/picgoto target=&quot;_blank&quot;><span class="link">PicGoto</span></a><br>
+<a href=http://www.stellarjourney.com target=&quot;_blank&quot;><span class="link">OnStepper</span></a><br>
+<a href=http://www.astronomoamador.com.br/arduino-controle-de-telescopio target=&quot;_blank&quot;><span class="link">FireGoto</span></a><br>
 
 
-http://nevoeiro.org/blog/archives/1290
-http://www.astronomoamador.com.br/arduino-controle-de-telescopio
+
+
+
