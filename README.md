@@ -23,7 +23,8 @@ Eletrônica necessária:<br>
 4 - Transformador DC-DC;<br>
 5 - Motores de Passo BIPOLAR (4, 6 ou 8 fios);<br>
 
-http://nevoeiro.org/wp-content/uploads/2015/09/teke.png
+<img src="http://nevoeiro.org/wp-content/uploads/2015/09/teke.png" alt="Telescopio" >
+
 
 
 
