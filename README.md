@@ -1,7 +1,7 @@
 # OAR
 OAR – Astronomical Observatory Remote
 
-ETAPA COntrole de Telescopio montagem Split Ring
+ETAPA Controle de Telescopio montagem Split Ring
 
 Objetivo é controlar o telescópio fazendo uso de um MicroComputador ou de um Tablet. O sistema possibilita a busca automática de objeto celeste como a Lua, Planetas, Galaxias, Nebulosas e Cometas. Permite fazer fotografias de longa exposição fazendo o uso de porta ST4
 
