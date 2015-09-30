@@ -23,13 +23,17 @@ Eletrônica necessária:<br>
 4 - Transformador DC-DC;<br>
 5 - Motores de Passo BIPOLAR (4, 6 ou 8 fios);<br>
 
+<br>
+Esquema Eletrico<br>
+
+<img src="https://github.com/rgnazar/OAR/blob/master/esquema.png?raw=true alt="Esquema Eletrico" >
+
 <img src="http://nevoeiro.org/wp-content/uploads/2015/09/teke.png" alt="Telescopio" >
 
 <br>
 Este projeto é desenvolvido pelo Grupo 
 <a href=http://nevoeiro.org/blog/archives/1290 target=&quot;_blank&quot;><span class="link">Nevoeiro</span></a> mas queremos que você participe.<br>
 O Grupo <a href=http://nevoeiro.org target=&quot;_blank&quot;><span class="link">Nevoeiro</span></a> é um grupo independente de astrônomos amadores de Curitiba e região que se reúne para fazer observações astronômicas em campo afastado das luzes da cidade, além de atividades secundárias como o estudo e a prática de astrofotografia e construção artesanal de telescópios.
-
 
 
 Outros projetos que vale apena conhecer e foram fontes de inspiração....
