@@ -1,4 +1,6 @@
 #include <DueTimer.h>
+#include <math.h>
+#include <Time.h>
 
 #define DEBUG 1
 
@@ -19,16 +21,20 @@
 #define MotorDEC_M0 51
 #define MotorDEC_Ativa 53
 
-//Define o menor ciclo possivel do TIMER de interrupcao
-#define InterrupcaoPulso 33
+//Define o menor ciclo possivel do TIMER de interrupcao Primos 11 13 17 19 23 29 31 37 41 43 47 53 59 61 67 71 73 79 83 89  97 
+#define InterrupcaoPulso 43
 
-
+//Virtual microseconds
+double microseconds=0, tempmicroseconds=0;
+int oldsegundo=0;
 
 //Timer de acionamento dos passo dos motores
 double VeloARMotor  = 0, TimerARMotor  = 1150, FreqARMotor = 0,
        VeloDECMotor = 0, TimerDECMotor = 1150, FreqDECMotor = 0;
 
-
+//Controle do motor e direcao  
+boolean  RALESTE=true, DECNORTE=false, STOPDEC=false, STOPRA=true; 
+long PassoDEC=0, PassoRA=0;
 
 
 void setup() {
@@ -73,8 +79,8 @@ void setup() {
   digitalWrite(MotorDEC_Ativa, LOW);
 
   //Inicia o Timer do motor
-  Timer3.start(InterrupcaoPulso);
-  Timer3.attachInterrupt(Motor_Milis_Dir_Micro);
+  Timer0.start(InterrupcaoPulso);
+  Timer0.attachInterrupt(Motor_Milis_Dir_Micro);
 
 
 }
@@ -82,9 +88,13 @@ void setup() {
 void loop() {
   if (DEBUG == 1)
   {
-    Serial.println(TimerDECMotor);
-    Serial.println(FreqDECMotor);
-    Serial.println(InterrupcaoPulso);
+   // Serial.println(TimerDECMotor);
+   // Serial.println(FreqDECMotor);
+    Serial.print(now());
+    Serial.println(microseconds,6);
+    Serial.println(PassoDEC);
+    Serial.println(PassoRA);
+
   }
   // put your main code here, to run repeatedly:
 
