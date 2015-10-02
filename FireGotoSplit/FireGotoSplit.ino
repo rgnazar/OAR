@@ -25,8 +25,8 @@
 #define InterrupcaoPulso 43
 
 //Virtual microseconds
-double microseconds=0, tempmicroseconds=0;
-int oldsegundo=0;
+double segundodecimal=0, tempmicroseconds=0;
+int oldsegundo=0, tempsegundo=0;
 
 //Timer de acionamento dos passo dos motores
 double VeloARMotor  = 0, TimerARMotor  = 1150, FreqARMotor = 0,
