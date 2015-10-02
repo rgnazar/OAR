@@ -29,6 +29,20 @@
 double segundodecimal=0, tempmicroseconds=0;
 int oldsegundo=0, tempsegundo=0;
 
+
+//Informações Basicas do ambiente
+int NumeroPassoDEC = 1856000,NumeroPassoRA = 1856000;
+    int VeloDECMotor = 180,VeloRAMotor = 180;
+    double latitude = -25.40,longitude = -49.20;
+    int DataHora = 0, UTC = 0;
+    char Local = "Meu Observatorio";
+    
+    
+    //Variaveis de controle
+    double currentMillis=0;
+
+
+
 //Timer de acionamento dos passo dos motores
 double VeloARMotor  = 0, TimerARMotor  = 1150, FreqARMotor = 0,
        VeloDECMotor = 0, TimerDECMotor = 1150, FreqDECMotor = 0;
@@ -42,9 +56,10 @@ dueFlashStorage dueFlashStorage;
 
 // Estrutura de armazenamento permanente.
 struct Configuration {
-  int32_t MaxPassoAlt;
-  int32_t MaxPassoAz;
-  int32_t MinTimer;
+  int32_t NumeroPassoRA;
+  int32_t NumeroPassoDEC;
+  int32_t VeloRAMotor;
+  int32_t VeloDECMotor;
   uint32_t DataHora;
   double latitude;
   double longitude;
@@ -60,26 +75,21 @@ void setup() {
 //Iniciando as portas seriais
   Serial.begin(9600);
   Serial2.begin(9600);
-  
-  
-  
-  /* Flash is erased every time new code is uploaded. Write the default configuration to flash if first time */
-  // running for the first time?
+  //Verifica se e primeira execucao
   uint8_t codeRunningForTheFirstTime = dueFlashStorage.read(0); // flash bytes will be 255 at first run
   Serial.print("Primeira Execucao ? : ");
   if (codeRunningForTheFirstTime) {
-    Serial.println("yes");
-    /* OK first time running, set defaults */
-    configuration.MaxPassoAlt = 1856000;
-    configuration.MaxPassoAz = 1856000;
-    configuration.MinTimer = 180;
-    configuration.latitude = -25.40;;
-    configuration.longitude = -49.20;
-    setTime(22, 00, 00, 23, 03, 2015);
-    MilissegundoSeg = second();
+    SerialPrint("sim");
+    /* Sim primeira execucao carraga valores iniciais do ambiente na memoria permanente*/
+    configuration.NumeroPassoDEC = NumeroPassoDEC;
+    configuration.NumeroPassoRA = NumeroPassoRA;
+    configuration.VeloDECMotor = VeloDECMotor;
+    configuration.VeloRAMotor = VeloRAMotor;
+    configuration.latitude = latitude;
+    configuration.longitude = longitude;
     configuration.DataHora = now();
-    configuration.UTC = 0;
-    configuration.Local = "Minha Casa";
+    configuration.UTC = UTC;
+    configuration.Local = Local;
     // write configuration struct to flash at adress 4
     byte b2[sizeof(Configuration)]; // create byte array to store the struct
     memcpy(b2, &configuration, sizeof(Configuration)); // copy the struct to the byte array
@@ -88,26 +98,21 @@ void setup() {
     dueFlashStorage.write(0, 0);
   }
   else {
-    Serial.println("no");
+    SerialPrint("nao");
+    /* Não valores ja carregados anteriormente */
   }
+  //carraga valores do ambiente da memoria permanente
   byte* b = dueFlashStorage.readAddress(4); // byte array which is read from flash at adress 4
   memcpy(&configurationFromFlash, b, sizeof(Configuration)); // copy byte array to temporary struct
-  MaxPassoAlt = configurationFromFlash.MaxPassoAlt;
-  MaxPassoAz = configurationFromFlash.MaxPassoAz;
-  MinTimer = configurationFromFlash.MinTimer;
+  NumeroPassoRA = configurationFromFlash.NumeroPassoRA;
+  NumeroPassoDEC = configurationFromFlash.NumeroPassoDEC;
+  VeloRAMotor = configurationFromFlash.VeloRAMotor;
+  VeloDECMotor = configurationFromFlash.VeloDECMotor;
   latitude = configurationFromFlash.latitude;
   longitude = configurationFromFlash.longitude;
   UTC = configurationFromFlash.UTC;
   setTime(configurationFromFlash.DataHora);
-  iniciapmotores();
-  SerialPrint("00:00:00#"); //RTA para leitura do driver ASCOM da MEADE autostar I
-  delay (200);
-  previousMillis = millis();
-  PCommadMillis = previousMillis;
-  ErroAlt = ErroAz = 44.0;
-  ResolucaoeixoAltGrausDecimal = 360.0 / MaxPassoAlt ;
-  ResolucaoeixoAzGrausDecimal = 360.0 / MaxPassoAz ;
-
+  Local=configurationFromFlash.Local;
   
   //Iniciar as variaveis do motor de passo
   pinMode(MotorRA_Direcao, OUTPUT);
@@ -148,8 +153,8 @@ void setup() {
   //Inicia o Timer do motor
   Timer0.start(InterrupcaoPulso);
   Timer0.attachInterrupt(Motor_Milis_Dir_Micro);
-
-
+  //Contador de millis
+  currentMillis = millis();
 }
 
 void loop() {
@@ -157,10 +162,9 @@ void loop() {
   {
    // Serial.println(TimerDECMotor);
    // Serial.println(FreqDECMotor);
-    Serial.print(now());
-    Serial.println(segundodecimal,6);
-    Serial.println(PassoDEC);
-    Serial.println(PassoRA);
+    SerialPrint(String(segundodecimal));
+    SerialPrint(String(PassoDEC));
+    SerialPrint(String(PassoRA));
 
   }
   RampaDEC();
