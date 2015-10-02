@@ -1,9 +1,10 @@
 #include <DueTimer.h>
-#include <math.h>
-#include <Time.h>
+#include <flash_efc.h>
+#include <efc.h>
 #include <DueFlashStorage.h>
+#include <Time.h>
 
-#define DEBUG 1
+#define DEBUG 2
 
 #define MotorRA_Direcao 23
 #define MotorRA_Passo 25
@@ -22,52 +23,71 @@
 #define MotorDEC_M0 51
 #define MotorDEC_Ativa 53
 
-//Define o menor ciclo possivel do TIMER de interrupcao Primos 11 13 17 19 23 29 31 37 41 43 47 53 59 61 67 71 73 79 83 89  97 
-#define InterrupcaoPulso 43
+//Define o menor ciclo possivel do TIMER de interrupcao Primos 11 13 17 19 23 29 31 37 41 43 47 53 59 61 67 71 73 79 83 89  97
+#define InterrupcaoPulso 97
+
+
+//Variaveis de controle para ler comandos LX200  ----------------------------------------------------------------------------------------------------------------
+boolean cmdComplete = false, doispontos = true; // whether the string is complete
+char buffercmd[30];
+char inputcmd[30];// a string to hold incoming data
+int pontBuffer = 0;
+int pontCommand = 0;
+int numCommand = 0;
+
 
 //Virtual microseconds
-double segundodecimal=0, tempmicroseconds=0;
-int oldsegundo=0, tempsegundo=0;
+double segundodecimal = 0, tempmicroseconds = 0;
+int oldsegundo = 0, tempsegundo = 0;
 
 
 //Informações Basicas do ambiente
-int NumeroPassoDEC = 1856000,NumeroPassoRA = 1856000;
-    int VeloDECMotor = 180,VeloRAMotor = 180;
-    double latitude = -25.40,longitude = -49.20;
-    int DataHora = 0, UTC = 0;
-    char Local = "Meu Observatorio";
-    
-    
-    //Variaveis de controle
-    double currentMillis=0;
-    
-    
-    //Variaveis de controle da execação ativa de comando
-double millisComondoInicial=0;
-int ultimoComando=0;
+int NumeroPassoDEC = 1856000, NumeroPassoRA = 1856000;
+int VeloMaxDEC = 1150, VeloMaxRA = 1150;
+double latitude = -25.40, longitude = -49.20;
+int DataHora = 0, UTC = 0;
+//    char local[20] = "Meu Observatorio";
+
+
+//Variaveis de controle
+double currentMillis = 0;
+
+
+//Variaveis de controle da execucao ativa de comando
+double millisComondoInicial = 0;
+int ultimoComando = 10;
 
 //Timer de acionamento dos passo dos motores
-double VeloARMotor  = 0, TimerARMotor  = 1150, FreqARMotor = 0,
-       VeloDECMotor = 0, TimerDECMotor = 1150, FreqDECMotor = 0;
 
-//Controle do motor e direcao  
-boolean  RALESTE=true, DECNORTE=false, STOPDEC=false, STOPRA=true; 
-long PassoDEC=0, PassoRA=0;
+int IrqMotorRA = 0;
+int TimerMotorRA = 0;
+int IrqMotorDEC = 0;
+int TimerMotorDEC = 0;
+boolean RampaRAAtiva = true;
+int RampaRACount = 0;
+boolean RampaDECAtiva = true;
+int RampaDECCount = 0;
+int VeloDECMotor = 0, VeloRAMotor = 0;
+double TimerRampa = 0;
+
+//Controle do motor e direcao
+boolean  RALESTE = true, DECNORTE = false, STOPDEC = false, STOPRA = false;
+long PassoDEC = 0, PassoRA = 0;
 
 //Armazenamento permanente de variaveis
-dueFlashStorage dueFlashStorage;
+DueFlashStorage dueFlashStorage;
 
 // Estrutura de armazenamento permanente.
 struct Configuration {
-  int32_t NumeroPassoRA;
-  int32_t NumeroPassoDEC;
-  int32_t VeloRAMotor;
-  int32_t VeloDECMotor;
-  uint32_t DataHora;
-  double latitude;
-  double longitude;
-  int32_t UTC;
-  char* Local;
+  int32_t PNumeroPassoRA;
+  int32_t PNumeroPassoDEC;
+  int32_t PVeloMaxRA;
+  int32_t PVeloMaxDEC;
+  uint32_t PDataHora;
+  double Platitude;
+  double Plongitude;
+  int32_t PUTC;
+  char* PLocal;
 };
 Configuration configuration;
 Configuration configurationFromFlash; // Cria uma estrutura temporaria
@@ -75,24 +95,24 @@ Configuration configurationFromFlash; // Cria uma estrutura temporaria
 
 
 void setup() {
-//Iniciando as portas seriais
+  //Iniciando as portas seriais
   Serial.begin(9600);
-  Serial2.begin(9600);
+  Serial3.begin(9600);
   //Verifica se e primeira execucao
   uint8_t codeRunningForTheFirstTime = dueFlashStorage.read(0); // flash bytes will be 255 at first run
   Serial.print("Primeira Execucao ? : ");
   if (codeRunningForTheFirstTime) {
     SerialPrint("sim");
     /* Sim primeira execucao carraga valores iniciais do ambiente na memoria permanente*/
-    configuration.NumeroPassoDEC = NumeroPassoDEC;
-    configuration.NumeroPassoRA = NumeroPassoRA;
-    configuration.VeloDECMotor = VeloDECMotor;
-    configuration.VeloRAMotor = VeloRAMotor;
-    configuration.latitude = latitude;
-    configuration.longitude = longitude;
-    configuration.DataHora = now();
-    configuration.UTC = UTC;
-    configuration.Local = Local;
+    configuration.PNumeroPassoDEC = NumeroPassoDEC;
+    configuration.PNumeroPassoRA = NumeroPassoRA;
+    configuration.PVeloMaxDEC = VeloMaxDEC;
+    configuration.PVeloMaxRA = VeloMaxRA;
+    configuration.Platitude = latitude;
+    configuration.Plongitude = longitude;
+    configuration.PDataHora = now();
+    configuration.PUTC = UTC;
+    //    configuration.PLocal = Local;
     // write configuration struct to flash at adress 4
     byte b2[sizeof(Configuration)]; // create byte array to store the struct
     memcpy(b2, &configuration, sizeof(Configuration)); // copy the struct to the byte array
@@ -107,16 +127,16 @@ void setup() {
   //carraga valores do ambiente da memoria permanente
   byte* b = dueFlashStorage.readAddress(4); // byte array which is read from flash at adress 4
   memcpy(&configurationFromFlash, b, sizeof(Configuration)); // copy byte array to temporary struct
-  NumeroPassoRA = configurationFromFlash.NumeroPassoRA;
-  NumeroPassoDEC = configurationFromFlash.NumeroPassoDEC;
-  VeloRAMotor = configurationFromFlash.VeloRAMotor;
-  VeloDECMotor = configurationFromFlash.VeloDECMotor;
-  latitude = configurationFromFlash.latitude;
-  longitude = configurationFromFlash.longitude;
-  UTC = configurationFromFlash.UTC;
-  setTime(configurationFromFlash.DataHora);
-  Local=configurationFromFlash.Local;
-  
+  NumeroPassoRA = configurationFromFlash.PNumeroPassoRA;
+  NumeroPassoDEC = configurationFromFlash.PNumeroPassoDEC;
+  VeloMaxDEC = configurationFromFlash.PVeloMaxDEC;
+  VeloMaxRA = configurationFromFlash.PVeloMaxRA;
+  latitude = configurationFromFlash.Platitude;
+  longitude = configurationFromFlash.Plongitude;
+  UTC = configurationFromFlash.PUTC;
+  setTime(configurationFromFlash.PDataHora);
+  // Local = configurationFromFlash.PLocal;
+
   //Iniciar as variaveis do motor de passo
   pinMode(MotorRA_Direcao, OUTPUT);
   pinMode(MotorRA_Passo, OUTPUT);
@@ -135,7 +155,7 @@ void setup() {
   pinMode(MotorDEC_M0, OUTPUT);
   pinMode(MotorDEC_Ativa, OUTPUT);
 
-//Aciona os pinos por padrão
+  //Aciona os pinos por padrão
   digitalWrite(MotorRA_Direcao, HIGH);
   digitalWrite(MotorRA_Passo, LOW);
   digitalWrite(MotorRA_Sleep, HIGH);
@@ -161,29 +181,43 @@ void setup() {
 }
 
 void loop() {
-      currentMillis = millis();
+  currentMillis = millis();
+
+
 
   if (DEBUG == 1)
   {
-   // Serial.println(TimerDECMotor);
-   // Serial.println(FreqDECMotor);
-    SerialPrint(String(segundodecimal));
-    SerialPrint(String(PassoDEC));
-    SerialPrint(String(PassoRA));
+    Serial.print("TimerMotorRA: ");
+    Serial.println(TimerMotorRA);
+    Serial.print("VeloMaxRA: ");
+    Serial.println(VeloMaxRA);
+    Serial.print("VeloRAMotor: ");
+    Serial.println(VeloRAMotor);
+    // SerialPrint(String(segundodecimal));
+    //SerialPrint(String(PassoDEC));
+    //SerialPrint(String(TimerMotorDEC));
 
   }
-  RampaDEC();
-  RampaRA();
+
+  //Timer de acionamento da rampa
+  if (TimerRampa < currentMillis)
+  {
+    TimerRampa = currentMillis + 20;
+    RampaDEC();
+    RampaRA();
+  }
+
+
   //Este IF manda um comando "00:00:00#" para iniciar a comunicacao de forma ativa
   if (millisComondoInicial < currentMillis)
   {
     millisComondoInicial = currentMillis + 497;
     if (ultimoComando > 10)
     {
-        SerialPrint("00:00:00#");
+      SerialPrint("00:00:00#");
     }
-    else{
-        ultimoComando++;
+    else {
+      ultimoComando++;
     }
   }
 

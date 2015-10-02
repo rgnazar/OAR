@@ -30,7 +30,7 @@ void Motor_Milis_Dir_Micro()
     if (IrqMotorDEC > TimerMotorDEC) {
       digitalWrite(MotorDEC_Ativa, LOW);
       digitalWrite(MotorDEC_Passo, HIGH);
-      TimerMotorDEC = VeloDECMotor + TimerDECMotor;
+      TimerMotorDEC = VeloDECMotor + TimerMotorDEC;
       if (DECNORTE )
       {
         digitalWrite(MotorDEC_Direcao, HIGH);
@@ -72,18 +72,21 @@ void ParaTudo()
 {
   STOPRA=true;
   STOPDEC=true;
+  //Zera Contador dos morotes
+  IrqMotorRA=IrqMotorDEC=TimerMotorRA=TimerMotorDEC=0;
 }
 void AtivaTudo()
 {
   STOPRA=false;
   STOPDEC=false;
+
 }
 void RampaRA() //Gerencia Rampa de aceleracao do motor RA
 {
   if (RampaRAAtiva)
   {
     RampaRACount++;
-    double tempVeloRAMotor = VeloMaxRA*100/RampaRACount;
+    double tempVeloRAMotor = VeloMaxRA*100/(25+RampaRACount);
     if (tempVeloRAMotor<VeloMaxRA)
     {
       VeloRAMotor=VeloMaxRA;
@@ -104,7 +107,7 @@ void RampaDEC() //Gerencia Rampa de aceleracao do motor RA
   if (RampaDECAtiva)
   {
     RampaDECCount++;
-    double tempVeloDECMotor = VeloMaxDEC*100/RampaDECCount;
+    double tempVeloDECMotor = VeloMaxDEC*100/(25+RampaDECCount);
     if (tempVeloDECMotor<VeloMaxDEC)
     {
       VeloDECMotor=VeloMaxDEC;
@@ -119,3 +122,4 @@ void RampaDEC() //Gerencia Rampa de aceleracao do motor RA
     RampaDECCount=0;
   }
 }
+
