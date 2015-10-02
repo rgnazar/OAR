@@ -1,6 +1,7 @@
 #include <DueTimer.h>
 #include <math.h>
 #include <Time.h>
+#include <DueFlashStorage.h>
 
 #define DEBUG 1
 
@@ -36,13 +37,79 @@ double VeloARMotor  = 0, TimerARMotor  = 1150, FreqARMotor = 0,
 boolean  RALESTE=true, DECNORTE=false, STOPDEC=false, STOPRA=true; 
 long PassoDEC=0, PassoRA=0;
 
+//Armazenamento permanente de variaveis
+dueFlashStorage dueFlashStorage;
+
+// Estrutura de armazenamento permanente.
+struct Configuration {
+  int32_t MaxPassoAlt;
+  int32_t MaxPassoAz;
+  int32_t MinTimer;
+  uint32_t DataHora;
+  double latitude;
+  double longitude;
+  int32_t UTC;
+  char* Local;
+};
+Configuration configuration;
+Configuration configurationFromFlash; // Cria uma estrutura temporaria
+
+
 
 void setup() {
-
+//Iniciando as portas seriais
   Serial.begin(9600);
+  Serial2.begin(9600);
+  
+  
+  
+  /* Flash is erased every time new code is uploaded. Write the default configuration to flash if first time */
+  // running for the first time?
+  uint8_t codeRunningForTheFirstTime = dueFlashStorage.read(0); // flash bytes will be 255 at first run
+  Serial.print("Primeira Execucao ? : ");
+  if (codeRunningForTheFirstTime) {
+    Serial.println("yes");
+    /* OK first time running, set defaults */
+    configuration.MaxPassoAlt = 1856000;
+    configuration.MaxPassoAz = 1856000;
+    configuration.MinTimer = 180;
+    configuration.latitude = -25.40;;
+    configuration.longitude = -49.20;
+    setTime(22, 00, 00, 23, 03, 2015);
+    MilissegundoSeg = second();
+    configuration.DataHora = now();
+    configuration.UTC = 0;
+    configuration.Local = "Minha Casa";
+    // write configuration struct to flash at adress 4
+    byte b2[sizeof(Configuration)]; // create byte array to store the struct
+    memcpy(b2, &configuration, sizeof(Configuration)); // copy the struct to the byte array
+    dueFlashStorage.write(4, b2, sizeof(Configuration)); // write byte array to flash
+    // write 0 to address 0 to indicate that it is not the first time running anymore
+    dueFlashStorage.write(0, 0);
+  }
+  else {
+    Serial.println("no");
+  }
+  byte* b = dueFlashStorage.readAddress(4); // byte array which is read from flash at adress 4
+  memcpy(&configurationFromFlash, b, sizeof(Configuration)); // copy byte array to temporary struct
+  MaxPassoAlt = configurationFromFlash.MaxPassoAlt;
+  MaxPassoAz = configurationFromFlash.MaxPassoAz;
+  MinTimer = configurationFromFlash.MinTimer;
+  latitude = configurationFromFlash.latitude;
+  longitude = configurationFromFlash.longitude;
+  UTC = configurationFromFlash.UTC;
+  setTime(configurationFromFlash.DataHora);
+  iniciapmotores();
+  SerialPrint("00:00:00#"); //RTA para leitura do driver ASCOM da MEADE autostar I
+  delay (200);
+  previousMillis = millis();
+  PCommadMillis = previousMillis;
+  ErroAlt = ErroAz = 44.0;
+  ResolucaoeixoAltGrausDecimal = 360.0 / MaxPassoAlt ;
+  ResolucaoeixoAzGrausDecimal = 360.0 / MaxPassoAz ;
+
+  
   //Iniciar as variaveis do motor de passo
-
-
   pinMode(MotorRA_Direcao, OUTPUT);
   pinMode(MotorRA_Passo, OUTPUT);
   pinMode(MotorRA_Sleep, OUTPUT);
@@ -60,7 +127,7 @@ void setup() {
   pinMode(MotorDEC_M0, OUTPUT);
   pinMode(MotorDEC_Ativa, OUTPUT);
 
-
+//Aciona os pinos por padrão
   digitalWrite(MotorRA_Direcao, HIGH);
   digitalWrite(MotorRA_Passo, LOW);
   digitalWrite(MotorRA_Sleep, HIGH);
@@ -96,8 +163,13 @@ void loop() {
     Serial.println(PassoRA);
 
   }
-  
   RampaDEC();
   RampaRA();
+  currentMillis = millis();
+  if (PCommadMillis < currentMillis)
+  {
+  //  PrintLocalHora();
+    PCommadMillis = PCommadMillis + 1497;
+  }
 
 }
