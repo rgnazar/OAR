@@ -96,6 +96,8 @@ void loop() {
     Serial.println(PassoRA);
 
   }
-  // put your main code here, to run repeatedly:
+  
+  RampaDEC();
+  RampaRA();
 
 }
