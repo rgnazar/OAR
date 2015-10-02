@@ -91,7 +91,7 @@ void loop() {
    // Serial.println(TimerDECMotor);
    // Serial.println(FreqDECMotor);
     Serial.print(now());
-    Serial.println(microseconds,6);
+    Serial.println(segundodecimal,6);
     Serial.println(PassoDEC);
     Serial.println(PassoRA);
 
