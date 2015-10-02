@@ -40,8 +40,11 @@ int NumeroPassoDEC = 1856000,NumeroPassoRA = 1856000;
     
     //Variaveis de controle
     double currentMillis=0;
-
+    
+    
+    //Variaveis de controle da execação ativa de comando
 double millisComondoInicial=0;
+int ultimoComando=0;
 
 //Timer de acionamento dos passo dos motores
 double VeloARMotor  = 0, TimerARMotor  = 1150, FreqARMotor = 0,
@@ -171,11 +174,17 @@ void loop() {
   }
   RampaDEC();
   RampaRA();
-  //Este IF manda um comando "00:00:00#" para iniciar a comunicacao de forma passiva
+  //Este IF manda um comando "00:00:00#" para iniciar a comunicacao de forma ativa
   if (millisComondoInicial < currentMillis)
   {
-  SerialPrint("00:00:00#");
-    millisComondoInicial = currentMillis + 1497;
+    millisComondoInicial = currentMillis + 497;
+    if (ultimoComando > 10)
+    {
+        SerialPrint("00:00:00#");
+    }
+    else{
+        ultimoComando++;
+    }
   }
 
 }
