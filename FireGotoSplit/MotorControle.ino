@@ -47,17 +47,18 @@ void Motor_Milis_Dir_Micro()
   FreqDECMotor = FreqDECMotor + InterrupcaoPulso;
 
   //Vitual micro segicrosegundo
-  if (tempmicroseconds < (1000000 - InterrupcaoPulso) || (now() == oldsegundo))
+  tempsegundo=second();
+  if (tempmicroseconds < (1000000 - InterrupcaoPulso) || (tempsegundo == oldsegundo))
   {
 
     tempmicroseconds = tempmicroseconds + InterrupcaoPulso;
-    microseconds = tempmicroseconds / 1000000;
+    segundodecimal = tempsegundo + (tempmicroseconds / 1000000);
 
   }
   else
   {
-    oldsegundo = now();
-    microseconds = 0;
+    oldsegundo = tempsegundo;
+    segundodecimal = tempsegundo;
     tempmicroseconds = 0;
   }
 
