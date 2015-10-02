@@ -6,10 +6,10 @@ void Motor_Milis_Dir_Micro()
     digitalWrite(MotorRA_Ativa, HIGH);
   }
   else {
-    if (FreqARMotor > VeloARMotor) {
+    if (IrqMotorRA > TimerMotorRA) {
       digitalWrite(MotorRA_Ativa, LOW);
       digitalWrite(MotorRA_Passo, HIGH);
-      VeloARMotor = VeloARMotor + TimerARMotor;
+      TimerMotorRA = VeloRAMotor + TimerMotorRA;
       if (RALESTE )
       {
         digitalWrite(MotorRA_Direcao, HIGH);
@@ -27,10 +27,10 @@ void Motor_Milis_Dir_Micro()
     digitalWrite(MotorDEC_Ativa, HIGH);
   }
   else {
-    if (FreqDECMotor > VeloDECMotor) {
+    if (IrqMotorDEC > TimerMotorDEC) {
       digitalWrite(MotorDEC_Ativa, LOW);
       digitalWrite(MotorDEC_Passo, HIGH);
-      VeloDECMotor = VeloDECMotor + TimerDECMotor;
+      TimerMotorDEC = VeloDECMotor + TimerDECMotor;
       if (DECNORTE )
       {
         digitalWrite(MotorDEC_Direcao, HIGH);
@@ -43,8 +43,8 @@ void Motor_Milis_Dir_Micro()
       }
     }
   }
-  FreqARMotor = FreqARMotor + InterrupcaoPulso;
-  FreqDECMotor = FreqDECMotor + InterrupcaoPulso;
+  IrqMotorRA = IrqMotorRA + InterrupcaoPulso;
+  IrqMotorDEC = IrqMotorDEC + InterrupcaoPulso;
 
   //Vitual micro segicrosegundo
   tempsegundo=second();
@@ -77,4 +77,45 @@ void AtivaTudo()
 {
   STOPRA=false;
   STOPDEC=false;
+}
+void RampaRA() //Gerencia Rampa de aceleracao do motor RA
+{
+  if (RampaRAAtiva)
+  {
+    RampaRACount++;
+    double tempVeloRAMotor = VeloMaxRA*100/RampaRACount;
+    if (tempVeloRAMotor<VeloMaxRA)
+    {
+      VeloRAMotor=VeloMaxRA;
+    }
+    else
+    {
+      VeloRAMotor=tempVeloRAMotor;
+    }
+  }
+  else
+  {
+    RampaRACount=0;
+  }
+}
+
+void RampaDEC() //Gerencia Rampa de aceleracao do motor RA
+{
+  if (RampaDECAtiva)
+  {
+    RampaDECCount++;
+    double tempVeloDECMotor = VeloMaxDEC*100/RampaDECCount;
+    if (tempVeloDECMotor<VeloMaxDEC)
+    {
+      VeloDECMotor=VeloMaxDEC;
+    }
+    else
+    {
+      VeloDECMotor=tempVeloDECMotor;
+    }
+  }
+  else
+  {
+    RampaDECCount=0;
+  }
 }
