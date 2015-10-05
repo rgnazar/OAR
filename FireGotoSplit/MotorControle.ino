@@ -47,7 +47,7 @@ void Motor_Milis_Dir_Micro()
   IrqMotorDEC = IrqMotorDEC + InterrupcaoPulso;
 
   //Vitual micro segicrosegundo
-  tempsegundo=second();
+  tempsegundo = second();
   if (tempmicroseconds < (1000000 - InterrupcaoPulso) || (tempsegundo == oldsegundo))
   {
 
@@ -70,15 +70,15 @@ void Motor_Milis_Dir_Micro()
 
 void ParaTudo()
 {
-  STOPRA=true;
-  STOPDEC=true;
+  STOPRA = true;
+  STOPDEC = true;
   //Zera Contador dos morotes
-  IrqMotorRA=IrqMotorDEC=TimerMotorRA=TimerMotorDEC=0;
+  IrqMotorRA = IrqMotorDEC = TimerMotorRA = TimerMotorDEC = 0;
 }
 void AtivaTudo()
 {
-  STOPRA=false;
-  STOPDEC=false;
+  STOPRA = false;
+  STOPDEC = false;
 
 }
 void RampaRA() //Gerencia Rampa de aceleracao do motor RA
@@ -86,19 +86,19 @@ void RampaRA() //Gerencia Rampa de aceleracao do motor RA
   if (RampaRAAtiva)
   {
     RampaRACount++;
-    double tempVeloRAMotor = VeloMaxRA*100/(25+RampaRACount);
-    if (tempVeloRAMotor<VeloMaxRA)
+    double tempVeloRAMotor = VeloMaxRA * 100 / (25 + RampaRACount);
+    if (tempVeloRAMotor < VeloMaxRA)
     {
-      VeloRAMotor=VeloMaxRA;
+      VeloRAMotor = VeloMaxRA;
     }
     else
     {
-      VeloRAMotor=tempVeloRAMotor;
+      VeloRAMotor = tempVeloRAMotor;
     }
   }
   else
   {
-    RampaRACount=0;
+    RampaRACount = 0;
   }
 }
 
@@ -107,19 +107,45 @@ void RampaDEC() //Gerencia Rampa de aceleracao do motor RA
   if (RampaDECAtiva)
   {
     RampaDECCount++;
-    double tempVeloDECMotor = VeloMaxDEC*100/(25+RampaDECCount);
-    if (tempVeloDECMotor<VeloMaxDEC)
+    double tempVeloDECMotor = VeloMaxDEC * 100 / (25 + RampaDECCount);
+    if (tempVeloDECMotor < VeloMaxDEC)
     {
-      VeloDECMotor=VeloMaxDEC;
+      VeloDECMotor = VeloMaxDEC;
     }
     else
     {
-      VeloDECMotor=tempVeloDECMotor;
+      VeloDECMotor = tempVeloDECMotor;
     }
   }
   else
   {
-    RampaDECCount=0;
+    RampaDECCount = 0;
   }
 }
+
+void MovimentoSideral()
+{
+  if (AcompanhamentoAtivo)
+  {
+    VeloRAMotor = MicroSegporPassoSideralRA;
+    VeloDECMotor = MicroSegporPassoSideralDEC;
+    RampaDECAtiva = false;
+    RampaRAAtiva = false;
+  }
+}
+
+void CalculaPassoSidral()
+{
+  //Numeros total de passo para 360° / pelo dia sideral 23 horas, 56 minutos e 4 segundos (86164 Seg / 86400 / 86636)
+
+  MicroSegporPassoSideralRA = (999999.999999999999999999999999 / NumeroPassoRA) * 86164;
+  MicroSegporPassoSideralDEC = (999999.999999999999999999999999 / NumeroPassoDEC) * 86164;
+}
+
+void CalculaPosicaoMontagememGraus()
+{
+  EixoRAGra = PassoRA * 360.0 / NumeroPassoRA;
+  EixoDECGra = PassoDEC * 360.0 / NumeroPassoDEC;
+}
+
 

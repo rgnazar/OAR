@@ -24,7 +24,7 @@
 #define MotorDEC_Ativa 53
 
 //Define o menor ciclo possivel do TIMER de interrupcao Primos 11 13 17 19 23 29 31 37 41 43 47 53 59 61 67 71 73 79 83 89  97
-#define InterrupcaoPulso 97
+#define InterrupcaoPulso 67
 
 
 //Variaveis de controle para ler comandos LX200  ----------------------------------------------------------------------------------------------------------------
@@ -42,11 +42,14 @@ int oldsegundo = 0, tempsegundo = 0;
 
 
 //Informações Basicas do ambiente
-int NumeroPassoDEC = 1856000, NumeroPassoRA = 1856000;
+int NumeroPassoDEC = 1850000, NumeroPassoRA = 1850000;
 int VeloMaxDEC = 1150, VeloMaxRA = 1150;
 double latitude = -25.40, longitude = -49.20;
 int DataHora = 0, UTC = 0;
 //    char local[20] = "Meu Observatorio";
+
+//Vaiaveis da montagem
+double EixoRAGra = 0, EixoDECGra = 0;
 
 
 //Variaveis de controle
@@ -59,20 +62,25 @@ int ultimoComando = 10;
 
 //Timer de acionamento dos passo dos motores
 
-int IrqMotorRA = 0;
-int TimerMotorRA = 0;
-int IrqMotorDEC = 0;
-int TimerMotorDEC = 0;
+double IrqMotorRA = 0;
+double TimerMotorRA = 0;
+double IrqMotorDEC = 0;
+double TimerMotorDEC = 0;
 boolean RampaRAAtiva = true;
-int RampaRACount = 0;
+double RampaRACount = 0;
 boolean RampaDECAtiva = true;
-int RampaDECCount = 0;
-int VeloDECMotor = 0, VeloRAMotor = 0;
+double RampaDECCount = 0;
+double VeloDECMotor = 100.01, VeloRAMotor = 100.01;
 double TimerRampa = 0;
 
 //Controle do motor e direcao
 boolean  RALESTE = true, DECNORTE = false, STOPDEC = false, STOPRA = false;
 long PassoDEC = 0, PassoRA = 0;
+double GrauDecPorPassoRA = 0, GrauDecPorPassoDEC = 0;
+
+//Micors Segundo por passo e acompanhamento
+boolean AcompanhamentoAtivo = false;
+double MicroSegporPassoSideralDEC = 0.1, MicroSegporPassoSideralRA = 0.1;
 
 //Armazenamento permanente de variaveis
 DueFlashStorage dueFlashStorage;
@@ -110,6 +118,7 @@ void setup() {
     configuration.PVeloMaxRA = VeloMaxRA;
     configuration.Platitude = latitude;
     configuration.Plongitude = longitude;
+    setTime(22, 13, 35, 23, 10, 2015);
     configuration.PDataHora = now();
     configuration.PUTC = UTC;
     //    configuration.PLocal = Local;
@@ -160,20 +169,26 @@ void setup() {
   digitalWrite(MotorRA_Passo, LOW);
   digitalWrite(MotorRA_Sleep, HIGH);
   digitalWrite(MotorRA_Reset, HIGH);
-  digitalWrite(MotorRA_M2, LOW);
-  digitalWrite(MotorRA_M1, LOW);
-  digitalWrite(MotorRA_M0, LOW);
+  digitalWrite(MotorRA_M2, HIGH);
+  digitalWrite(MotorRA_M1, HIGH);
+  digitalWrite(MotorRA_M0, HIGH);
   digitalWrite(MotorRA_Ativa, LOW);
   digitalWrite(MotorDEC_Direcao, LOW);
   digitalWrite(MotorDEC_Passo, LOW);
   digitalWrite(MotorDEC_Sleep, HIGH);
   digitalWrite(MotorDEC_Reset, HIGH);
-  digitalWrite(MotorDEC_M2, LOW);
-  digitalWrite(MotorDEC_M1, LOW);
-  digitalWrite(MotorDEC_M0, LOW);
+  digitalWrite(MotorDEC_M2, HIGH);
+  digitalWrite(MotorDEC_M1, HIGH);
+  digitalWrite(MotorDEC_M0, HIGH);
   digitalWrite(MotorDEC_Ativa, LOW);
 
   //Inicia o Timer do motor
+  CalculaPassoSidral(); //Função que define quantos microsegundo deve ter cada passo
+
+  //Calcula quantos grau por passo
+  GrauDecPorPassoRA = 360.0 / NumeroPassoRA;
+  GrauDecPorPassoDEC = 360.0 / NumeroPassoDEC;
+
   Timer0.start(InterrupcaoPulso);
   Timer0.attachInterrupt(Motor_Milis_Dir_Micro);
   //Contador de millis
@@ -182,20 +197,26 @@ void setup() {
 
 void loop() {
   currentMillis = millis();
+  AcompanhamentoAtivo = true;
+  MovimentoSideral();
+  CalculaPosicaoMontagememGraus();
+  printRAmount();
 
 
 
   if (DEBUG == 1)
-  {
-    Serial.print("TimerMotorRA: ");
-    Serial.println(TimerMotorRA);
-    Serial.print("VeloMaxRA: ");
-    Serial.println(VeloMaxRA);
-    Serial.print("VeloRAMotor: ");
-    Serial.println(VeloRAMotor);
-    // SerialPrint(String(segundodecimal));
-    //SerialPrint(String(PassoDEC));
-    //SerialPrint(String(TimerMotorDEC));
+  { /*
+        Serial.print("horadec: ");
+        Serial.println(horadec);
+      /*  Serial.print("VeloMaxRA: ");
+        Serial.println(VeloMaxRA);
+        Serial.print("VeloRAMotor: ");
+        Serial.println(VeloRAMotor);
+     Serial.print("MicroSegporPassoSideralRA= ");
+     Serial.println(MicroSegporPassoSideralRA);
+     Serial.print("GrauPorPassoRA :");
+     Serial.println(EixoRAGra, 5);
+     //SerialPrint(String(TimerMotorDEC))*/;
 
   }
 
